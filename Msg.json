@@ -1,0 +1,7 @@
+{
+  "THANH_CONG" : "Xử lý thành công!",
+  "KHONG_THANH_CONG" : "Không thành công!",
+  "MA_TOKEN_KHONG_DUNG" : "Mã token không đúng!",
+  "TENTK_MK_KHONG_DUNG" : "Tên tài khoản hoặc mật khẩu không đúng!",
+  "DA_LOAD_HET_DU_LIEU" : "Đã load hết dữ liệu!"
+}
