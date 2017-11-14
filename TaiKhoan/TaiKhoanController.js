@@ -2,7 +2,6 @@ const express = require('express');
 const Router = express.Router();
 const TaiKhoanDB = require('./TaiKhoanDB');
 const Msg = require('../Msg.json');
-const TaiKhoanOBJ = require('./TaiKhoanOBJ');
 const moment = require('moment');
 const Utils = require('../Utils/Utils');
 const log = Utils.log4js.getLogger('TaiKhoanController.js');
@@ -28,6 +27,7 @@ Router.post('/login', async (req, res) => {
     {
         user.taikhoan = (req.body.taikhoan = req.body.taikhoan || "");
         user.matkhau = (req.body.matkhau = req.body.matkhau || "");
+        user.idpush = (req.body.idpush = req.body.idpush || "");
 
         let result = await TaiKhoanDB.loginUser(user);
         if (result === null) {
@@ -35,8 +35,8 @@ Router.post('/login', async (req, res) => {
         } else {
             let obj = null;
             for (i = 0; i < result.recordsets[0].length; i++) {
-                obj = new TaiKhoanOBJ();
-                obj.idnhanvien = result.recordsets[0][i].ID[0];
+                obj = {}
+                obj.idtaikhoan = result.recordsets[0][i].ID[0];
                 obj.tentaikhoan = result.recordsets[0][i].TenTaiKhoan;
                 obj.tendangnhap = result.recordsets[0][i].TenDangNhap;
                 obj.tennhomtk = result.recordsets[0][i].TenNhomTK;
@@ -48,8 +48,9 @@ Router.post('/login', async (req, res) => {
 
             if(obj != null)
             {
-                token = Utils.getToken(obj.idnhanvien);
-                let themLSDangNhap = TaiKhoanDB.themLSDangNhap(obj.idnhanvien, 1);
+                token = Utils.getToken(obj.idtaikhoan);
+                let themLSDangNhap = TaiKhoanDB.themLSDangNhap(obj.idtaikhoan, 1);
+                //Utils.pushNotification(0, user.idpush, 'TrangChu', 'Đăng nhập thành công!');
                 res.send(new AppThongTinTaiKhoanOBJ(true, Msg.THANH_CONG, token, obj));
             }
             else
@@ -112,6 +113,36 @@ Router.post('/doimatkhau', async(req, res) => {
             let result = await TaiKhoanDB.doiMatKhau(user);
 
             if(parseInt(result.recordset[0].Status) === 1)
+                res.send({ status : true, msg : Msg.THANH_CONG});
+            else
+                res.send({ status : false, msg : Msg.KHONG_THANH_CONG});
+        }
+    }
+    catch(err)
+    {
+        log.error(err);
+        res.send({ status : false, msg : Msg.KHONG_THANH_CONG});
+    }
+});
+
+//api/taikhoan/resetmatkhau?idtaikhoan=2
+Router.get('/resetmatkhau', async(req, res) => {
+    try
+    {
+        if(!Utils.verifyLogin(req.body.idtaikhoan, req.headers['token']))
+        {
+            log.error(Msg.MA_TOKEN_KHONG_DUNG + ": " + req.body.idtaikhoan + " - " + req.headers['token']);
+            res.send({ status : false, msg : Msg.MA_TOKEN_KHONG_DUNG});
+        }
+        else
+        {
+            let user = {}
+            user.idtaikhoan = req.body.idtaikhoan;
+            user.matkhau = Utils.MD5('12345678');
+    
+            let result = await TaiKhoanDB.resetMatKhau(user);
+
+            if(parseInt(result.rowsAffected[0])  > 0)
                 res.send({ status : true, msg : Msg.THANH_CONG});
             else
                 res.send({ status : false, msg : Msg.KHONG_THANH_CONG});

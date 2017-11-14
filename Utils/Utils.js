@@ -5,6 +5,7 @@ const configPort = require('../configPort.json');
 const moment = require('moment');
 const log4js = require('log4js');
 const numeral = require('numeral');
+const rp = require('request-promise');
 
 const MD5 = (string) => {
 
@@ -224,11 +225,11 @@ const MD5 = (string) => {
     return temp.toLowerCase();
 }
 
-const verifyLogin = (idnhanvien, token) => {
+const verifyLogin = (idtaikhoan, token) => {
     try
     {
         var decoded = jwt.verify(token, 'My@~Care!&');
-        if(decoded.idnhanvien == idnhanvien)
+        if(decoded.idtaikhoan == idtaikhoan)
             return true;
         else
             return false;
@@ -239,11 +240,11 @@ const verifyLogin = (idnhanvien, token) => {
     }
 }
 
-const getToken = (idnhanvien) => {
+const getToken = (idtaikhoan) => {
     //My@~Care!&
     try
     {
-        return jwt.sign({idnhanvien : idnhanvien}, "My@~Care!&");
+        return jwt.sign({idtaikhoan : idtaikhoan}, "My@~Care!&");
     }
     catch(err)
     {
@@ -263,11 +264,63 @@ const dinhDangTienTe = (value) => {
     return numeral(value).format('0,0') + " VNĐ";
 }
 
+const pushNotification = async(idnhanvien, token, Type, msg) => {
+    if(token === null)
+    {
+        let TokenFireBase = "";
+        let pool = await sql.connect(config);
+        let result = await pool.request()
+        .input('idtaikhoan', sql.Int, idtaikhoan)
+        .execute('sp_AppMyCare_GetTokenFireBase');
+    
+        sql.close();
+        
+        if(result.recordsets[0].length > 0)
+        {
+            TokenFireBase = result.recordsets[0][0].TokenFireBase;
+        }
+    }
+    else
+        TokenFireBase = token;
+    
+    let options = {
+        method: 'POST',
+        headers : {
+            'Content-Type' : 'application/json',
+            'Authorization' : configPort.keypush
+        },
+        uri: 'https://fcm.googleapis.com/fcm/send',
+        body: {
+            notification:{  
+                body:msg,
+                title: "",
+                sound:"default",
+                priority:"high"
+            },
+            data:{  
+                message : msg,
+                type: Type
+            },
+            to: TokenFireBase
+        },
+        json: true
+    };
+    
+    rp(options)
+        .then(function (parsedBody) {
+            console.log(parsedBody);
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
+}
+
 module.exports = {
     MD5,
     verifyLogin,
     getToken,
     ghiLog,
     log4js,
-    dinhDangTienTe
+    dinhDangTienTe,
+    pushNotification
 }
