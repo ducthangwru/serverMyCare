@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const configPort = require('./configPort.json');
+const configPort = process.env.port || 3000;
 const thuocApi = require('./Thuoc/ThuocController');
 const taiKhoanApi = require('./TaiKhoan/TaiKhoanController');
 const hoaDonApi = require('./HoaDon/HoaDonController');
@@ -13,6 +13,6 @@ app.use('/api/thuoc', thuocApi);
 app.use('/api/taikhoan', taiKhoanApi);
 app.use('/api/hoadon', hoaDonApi);
 
-app.listen(configPort.port , () => {
-    console.log(`App listen on ${configPort.port}`);
+app.listen(configPort , () => {
+    console.log(`App listen on ${configPort}`);
 })
