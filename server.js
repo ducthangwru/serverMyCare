@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const configPort = process.env.port || 3000;
+const configPort = process.env.PORT || 3000;
 const thuocApi = require('./Thuoc/ThuocController');
 const taiKhoanApi = require('./TaiKhoan/TaiKhoanController');
 const hoaDonApi = require('./HoaDon/HoaDonController');
