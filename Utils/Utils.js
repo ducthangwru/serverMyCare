@@ -1,11 +1,14 @@
 const jwt = require('jsonwebtoken');
-const sql = require('mssql');
 const config = require('../config.json');
-const configPort = require('../configPort.json');
+const configString = require('../configString.json');
 const moment = require('moment');
-const log4js = require('log4js');
 const numeral = require('numeral');
 const rp = require('request-promise');
+
+const mongoose = require('mongoose');
+const userSchema = require('../modules/api/users/usersSchema');
+let usersModel = mongoose.model('users', userSchema);
+
 
 const MD5 = (string) => {
 
@@ -225,11 +228,11 @@ const MD5 = (string) => {
     return temp.toLowerCase();
 }
 
-const verifyLogin = (idtaikhoan, token) => {
+const verifyLogin = (iduser, token) => {
     try
     {
         var decoded = jwt.verify(token, 'My@~Care!&');
-        if(decoded.idtaikhoan == idtaikhoan)
+        if(decoded.iduser == iduser)
             return true;
         else
             return false;
@@ -240,11 +243,11 @@ const verifyLogin = (idtaikhoan, token) => {
     }
 }
 
-const getToken = (idtaikhoan) => {
+const getToken = (iduser) => {
     //My@~Care!&
     try
     {
-        return jwt.sign({idtaikhoan : idtaikhoan}, "My@~Care!&");
+        return jwt.sign({iduser : iduser}, "My@~Care!&");
     }
     catch(err)
     {
@@ -253,32 +256,22 @@ const getToken = (idtaikhoan) => {
     }
 }
 
-const ghiLog = () => {
-    log4js.configure({
-        appenders: { log: { type: 'file', filename: `./Logs/log-${moment(new Date()).format("DD-MM-YYYY")}.log`} },
-        categories: { default: { appenders: ['log'], level: 'error' } }
-    });
-}
+// const ghiLog = () => {
+//     log4js.configure({
+//         appenders: { log: { type: 'file', filename: `./Logs/log-${moment(new Date()).format("DD-MM-YYYY")}.log`} },
+//         categories: { default: { appenders: ['log'], level: 'error' } }
+//     });
+// }
 
 const dinhDangTienTe = (value) => {
     return numeral(value).format('0,0') + " VNĐ";
 }
 
-const pushNotification = async(idnhanvien, token, Type, msg) => {
+const pushNotification = async(iduser, token, Type, msg) => {
     if(token === null)
     {
         let TokenFireBase = "";
-        let pool = await sql.connect(config);
-        let result = await pool.request()
-        .input('idtaikhoan', sql.Int, idtaikhoan)
-        .execute('sp_AppMyCare_GetTokenFireBase');
-    
-        sql.close();
         
-        if(result.recordsets[0].length > 0)
-        {
-            TokenFireBase = result.recordsets[0][0].TokenFireBase;
-        }
     }
     else
         TokenFireBase = token;
@@ -319,8 +312,6 @@ module.exports = {
     MD5,
     verifyLogin,
     getToken,
-    ghiLog,
-    log4js,
     dinhDangTienTe,
     pushNotification
 }

@@ -1,11 +1,4 @@
 {
-    "user": "sa",
-    "password": "ducthangwru",
-    "server": "DESKTOP-TVC0PFL",
-    "database": "MyCare",
-    "pool": {
-        "max": 100,
-        "min": 0,
-        "idleTimeoutMillis": 30000
-    }
+    "connectionString" : "mongodb://admin:admin@ds117858.mlab.com:17858/webme",
+    "port" : 6969
 }
